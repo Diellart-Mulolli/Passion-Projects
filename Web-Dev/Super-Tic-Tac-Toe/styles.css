@@ -10,11 +10,13 @@ html, body {
 h1 {
   text-align: center;
   width: 100%;
+  margin-top: 0px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .game-board {
   display: grid;
-  background-color: gray !important;
+  background-color: lightsteelblue !important;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 5px;

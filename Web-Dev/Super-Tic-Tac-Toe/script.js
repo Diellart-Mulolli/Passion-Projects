@@ -2,6 +2,13 @@ $(window).on("load", function () {
     console.log("Generating Super Tic-Tac-Toe Board");
     const gameBoard = $("#game-board");
     createSuperBoard(gameBoard);
+    let currentPlayer = 'X';
+
+    gameBoard.on("click", ".cell.empty", function () {
+        const cell = $(this);
+        setMove(cell, currentPlayer);
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    });
 });
 
 function createSuperBoard(gameBoard) {
@@ -16,11 +23,22 @@ function createSuperBoard(gameBoard) {
             .attr("data-sub-board", `${Math.floor(i / 3)}-${i % 3}`);
         for (let j = 0; j < 9; j++) {
             const cell = $("<div>")
-                .addClass("cell")
+                .addClass("cell empty")
                 .attr("data-cell", `${Math.floor(j / 3)}-${j % 3}`);
             subBoard.append(cell);
         }
         superCell.append(subBoard);
         gameBoard.append(superCell);
+    }
+}
+
+function setMove (cell, player) {
+    if (cell.text() !== '') {
+        console.error("Cell is already occupied.");
+        return;
+    }else{
+        cell.text(player);
+        cell.removeClass('empty');
+        cell.addClass(player === 'X' ? 'x-move' : 'o-move');
     }
 }
