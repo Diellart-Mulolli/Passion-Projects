@@ -21,6 +21,12 @@ function createSuperBoard(gameBoard) {
         const subBoard = $("<div>")
             .addClass("sub-board")
             .attr("data-sub-board", `${Math.floor(i / 3)}-${i % 3}`);
+        const back = $("<div>")
+            .addClass("back")
+            .text("Back")
+            
+            .attr("sub-board-back", `${Math.floor(i / 3)}-${i % 3}`);
+
         for (let j = 0; j < 9; j++) {
             const cell = $("<div>")
                 .addClass("cell empty")
@@ -28,6 +34,7 @@ function createSuperBoard(gameBoard) {
             subBoard.append(cell);
         }
         superCell.append(subBoard);
+        superCell.append(back);
         gameBoard.append(superCell);
     }
 }
@@ -38,6 +45,7 @@ function setMove (cell, player) {
         return;
     }else{
         cell.text(player);
+        cell.css('color', player === 'X' ? 'red' : 'blue');
         cell.removeClass('empty');
         cell.addClass(player === 'X' ? 'x-move' : 'o-move');
     }
