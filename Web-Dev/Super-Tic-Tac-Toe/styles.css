@@ -7,52 +7,66 @@ html, body {
   align-items: center;
 }
 
+h1 {
+  text-align: center;
+  width: 100%;
+}
+
 .game-board {
   display: grid;
+  background-color: gray !important;
   grid-template-columns: repeat(3, 1fr);
-  grid-column: 3;
-  gap: 2px;
-  border: 2px solid #1f2937;
-  padding: 2px;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+  border: 2px solid #a5b5cb;
   background: #f9fafb;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 300px;
-  max-height: 50vh;
+  box-sizing: border-box;
+  width: 600px;
+  height: 600px;
+  max-width: 90vw;
+  max-height: 90vh;
+  padding: 5px;
 }
 
 .super-cell {
-  border: 1px solid #1f2937;
+  /* border: 1px solid #1f2937; */
   padding: 2px;
-  background: #f9fafb;
+  background-color: lightgray !important;
   aspect-ratio: 1 / 1;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .sub-board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
+  grid-template-rows: repeat(3, 1fr);
+  /* gap: 1px; */
   width: 100%;
   height: 100%;
+  box-sizing: border-box;
 }
 
 .cell {
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid #1f2937;
+  border: 2px solid black;
   background: #ffffff;
-  font-size: 0.5rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #1f2937;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.1s ease;
   aspect-ratio: 1 / 1;
+  box-sizing: border-box;
 }
 
 .cell:hover {
   background: #e5e7eb;
-  transform: scale(1.05);
+  /* transform: scale(1.05); */
 }
 
 @media (max-width: 640px) {
