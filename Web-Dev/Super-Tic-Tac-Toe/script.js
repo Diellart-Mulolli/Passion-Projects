@@ -343,41 +343,57 @@ function checkOverallGameResult() {
     // 1) check ordered 3-in-a-row across super cells
     const lineWinner = calculateSuperWinner();
     if (lineWinner === 'X') {
-        gameState.isGameOver = true;
         $board.addClass('flipped game-won-x').removeClass('game-won-o game-draw');
         if (globalThis.playSound) try { globalThis.playSound('victory'); } catch (e) {}
+        endGame('X-line-win');
         return;
     }
     if (lineWinner === 'O') {
-        gameState.isGameOver = true;
         $board.addClass('flipped game-won-o').removeClass('game-won-x game-draw');
         if (globalThis.playSound) try { globalThis.playSound('defeat'); } catch (e) {}
+        endGame('O-line-win');
         return;
     }
 
-    // 2) if no ordered winner, when all super-cells are decided -> compare counts (ignore 'D' entries)
+    // 2) if no ordered winner, when all super-cells are decided -> compare counts (ignore 'D')
     const flat = gameState.superCellWinners.flat();
     const decidedCount = flat.filter(v => v !== null).length;
     if (decidedCount === 9) {
         const xCount = flat.filter(v => v === 'X').length;
         const oCount = flat.filter(v => v === 'O').length;
 
-        gameState.isGameOver = true;
         if (xCount === oCount) {
             $board.addClass('flipped game-draw').removeClass('game-won-x game-won-o');
             if (globalThis.playSound) try { globalThis.playSound('draw'); } catch (e) {}
+            endGame('draw-count-equal');
             return;
         }
         if (xCount > oCount) {
             $board.addClass('flipped game-won-x').removeClass('game-won-o game-draw');
             if (globalThis.playSound) try { globalThis.playSound('victory'); } catch (e) {}
+            endGame('x-more-supercells');
             return;
         } else {
             $board.addClass('flipped game-won-o').removeClass('game-won-x game-draw');
             if (globalThis.playSound) try { globalThis.playSound('defeat'); } catch (e) {}
+            endGame('o-more-supercells');
             return;
         }
     }
 
     // otherwise no overall result yet
+}
+
+function endGame(resultLabel) {
+  // mark finished, unbind handlers and visually disable cells
+  gameState.isGameOver = true;
+  // remove delegated handlers on the board
+  $("#game-board").off("click", ".cell");
+  $("#game-board").off("click", ".super-cell");
+
+  // add a class so CSS can make cells unclickable
+  $("#game-board").addClass("game-over");
+
+  // log final game state
+  console.log('Game finished:', resultLabel, gameState);
 }

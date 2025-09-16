@@ -18,12 +18,12 @@ html, body {
 h1 {
   text-align: center;
   width: 100%;
-  margin-top: 0px;
+  margin-bottom: 1rem;
 }
 h1 > span {
   display: inline-block;
   line-height: 1;
-  font-size: 2.5rem;
+  font-size: 4rem;
   vertical-align: middle;
   will-change: transform;
 }
@@ -34,11 +34,11 @@ h1 > span {
 }
 
 .span0 { animation-delay: 0s; }
-.span1 { animation-delay: 0.12s; }
+.span1 { animation-delay: 0.25s; }
 
 @keyframes bobbing {
   0%   { transform: translateY(0); }
-  50%  { transform: translateY(-6px); }
+  50%  { transform: translateY(-8px); }
   100% { transform: translateY(0); }
 }
 
@@ -56,7 +56,8 @@ h1 > span {
   height: 600px;
   max-width: 90vw;
   max-height: 90vh;
-  padding: 5px;
+  padding: 7px;
+  border-radius: 7px;
   perspective: 1000px; /* Creates 3D space for flip effect */
 }
 
