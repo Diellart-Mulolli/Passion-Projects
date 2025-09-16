@@ -91,10 +91,23 @@ h1 {
   background: #e5e7eb;
 }
 
-/* Flip super-cell on hover */
-/* .super-cell:hover {
-  transform: rotateY(180deg);
-} */
+/* highlight allowed super-cell for next move */
+.super-cell.allowed-x {
+    border: 3px solid #ef4444; /* stronger red border */
+    box-shadow: 0 8px 24px rgba(239,68,68,0.28), 0 0 0 6px rgba(239,68,68,0.10) inset;
+    transform: translateY(-2px);
+}
+
+.super-cell.allowed-o {
+    border: 3px solid #2563eb; /* stronger blue border */
+    box-shadow: 0 8px 24px rgba(37,99,235,0.28), 0 0 0 6px rgba(37,99,235,0.10) inset;
+    transform: translateY(-2px);
+}
+
+/* ensure smooth transition for border, shadow and position */
+.super-cell {
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
 
 @media (max-width: 640px) {
   .game-board {
