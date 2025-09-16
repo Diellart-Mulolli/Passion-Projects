@@ -71,9 +71,13 @@ globalThis.playSound = function (name) {
 };
 
 function clickLogic() {
+    // prevent binding/handling if game is finished or pending finalization
+    if (gameState.isGameOver) return;
+
     // ensure we don't bind multiple handlers
     $(".cell.empty").off("click").on("click", function (e) {
         e.preventDefault();
+        if (gameState.isGameOver) return; // extra guard for runtime
         const cell = $(this);
         if (!cell.hasClass('empty')) return; // ignore non-empty (safety)
 
@@ -210,7 +214,12 @@ function clearAllowedHighlights() {
 }
 
 function updateAllowedHighlight() {
+    // always clear first
     clearAllowedHighlights();
+
+    // do not show highlights if game is finished
+    if (gameState.isGameOver) return;
+
     const restrict = gameState.restrictToSuperCell;
     if (!restrict) return; // no restriction -> no single highlighted super-cell
     const [r, c] = restrict;
@@ -343,15 +352,18 @@ function checkOverallGameResult() {
     // 1) check ordered 3-in-a-row across super cells
     const lineWinner = calculateSuperWinner();
     if (lineWinner === 'X') {
+        // lock game immediately to prevent extra moves while awaiting flips/finalization
+        gameState.isGameOver = true;
         $board.addClass('flipped game-won-x').removeClass('game-won-o game-draw');
         if (globalThis.playSound) try { globalThis.playSound('victory'); } catch (e) {}
-        endGame('X-line-win');
+        endGameAfterFlips('X-line-win');
         return;
     }
     if (lineWinner === 'O') {
+        gameState.isGameOver = true;
         $board.addClass('flipped game-won-o').removeClass('game-won-x game-draw');
         if (globalThis.playSound) try { globalThis.playSound('defeat'); } catch (e) {}
-        endGame('O-line-win');
+        endGameAfterFlips('O-line-win');
         return;
     }
 
@@ -359,24 +371,27 @@ function checkOverallGameResult() {
     const flat = gameState.superCellWinners.flat();
     const decidedCount = flat.filter(v => v !== null).length;
     if (decidedCount === 9) {
+        // lock game immediately to prevent extra moves while awaiting flips/finalization
+        gameState.isGameOver = true;
+
         const xCount = flat.filter(v => v === 'X').length;
         const oCount = flat.filter(v => v === 'O').length;
 
         if (xCount === oCount) {
             $board.addClass('flipped game-draw').removeClass('game-won-x game-won-o');
             if (globalThis.playSound) try { globalThis.playSound('draw'); } catch (e) {}
-            endGame('draw-count-equal');
+            endGameAfterFlips('draw-count-equal');
             return;
         }
         if (xCount > oCount) {
             $board.addClass('flipped game-won-x').removeClass('game-won-o game-draw');
             if (globalThis.playSound) try { globalThis.playSound('victory'); } catch (e) {}
-            endGame('x-more-supercells');
+            endGameAfterFlips('x-more-supercells');
             return;
         } else {
             $board.addClass('flipped game-won-o').removeClass('game-won-x game-draw');
             if (globalThis.playSound) try { globalThis.playSound('defeat'); } catch (e) {}
-            endGame('o-more-supercells');
+            endGameAfterFlips('o-more-supercells');
             return;
         }
     }
@@ -385,15 +400,85 @@ function checkOverallGameResult() {
 }
 
 function endGame(resultLabel) {
-  // mark finished, unbind handlers and visually disable cells
+  // mark finished
   gameState.isGameOver = true;
-  // remove delegated handlers on the board
-  $("#game-board").off("click", ".cell");
-  $("#game-board").off("click", ".super-cell");
 
-  // add a class so CSS can make cells unclickable
+  // remove any direct click handlers from cells and super-cells
+  $(".cell").off("click");
+  $(".super-cell").off("click");
+
+  // remove any delegated handlers on the board and document
+  $("#game-board").off(); // removes delegated handlers bound to #game-board
+  $(document).off("click", ".cell");
+  $(document).off("click", ".super-cell");
+
+  // ensure clickLogic won't re-bind handlers by removing any calls via delegation
+  // (covers the gameBoard.on("click", ".super-cell", ...) bound at load)
+  $("#game-board").undelegate(".super-cell", "click");
+
+  // add a class so CSS can make cells unclickable (strong rule in CSS will enforce)
   $("#game-board").addClass("game-over");
 
-  // log final game state
-  console.log('Game finished:', resultLabel, gameState);
+  // lock any currently flipped/rotated super-cells so they visually remain flipped
+  $(".super-cell.rotated").addClass("locked-rotated");
+
+  // pretty-print final game state
+  try {
+    console.log('Game finished:', resultLabel);
+    console.log(JSON.stringify(gameState, null, 2));
+  } catch (e) {
+    console.log('Game finished (could not stringify):', resultLabel, gameState);
+  }
+}
+
+// helper: simple promise-based delay
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// wait for transform transitionend on a single element (or timeout)
+function waitForTransformEnd($el, timeout = 6500) {
+  return new Promise(resolve => {
+    if (!$el || $el.length === 0) return resolve();
+    const el = $el.get ? $el.get(0) : $el;
+    let resolved = false;
+    const onEnd = (ev) => {
+      if (ev.propertyName === 'transform' || ev.propertyName === 'webkitTransform') {
+        if (!resolved) {
+          resolved = true;
+          el.removeEventListener('transitionend', onEnd);
+          resolve();
+        }
+      }
+    };
+    el.addEventListener('transitionend', onEnd);
+    // fallback timeout
+    delay(timeout).then(() => {
+      if (!resolved) {
+        resolved = true;
+        el.removeEventListener('transitionend', onEnd);
+        resolve();
+      }
+    });
+  });
+}
+
+// wait for all currently-rotated super-cells to finish their transform
+async function waitForAllRotationsToFinish(timeoutPer = 6500) {
+  const $rotated = $('.super-cell.rotated').toArray();
+  if ($rotated.length === 0) return;
+  const promises = $rotated.map(el => waitForTransformEnd($(el), timeoutPer));
+  // wait for all (with each having its own timeout)
+  await Promise.all(promises);
+}
+
+// call endGame but only after current flips finish (non-blocking)
+async function endGameAfterFlips(resultLabel) {
+  // allow in-DOM rotateSubBoard toggles to start their transitions first
+  // small micro-delay so class toggles have applied
+  await delay(10);
+  // wait for any rotating super-cells to complete (each has 6000ms CSS)
+  await waitForAllRotationsToFinish(6100);
+  // then finalize end game
+  endGame(resultLabel);
 }

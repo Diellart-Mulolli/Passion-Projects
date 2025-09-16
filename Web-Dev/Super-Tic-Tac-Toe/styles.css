@@ -180,3 +180,29 @@ h1 > span {
 .rotated {
   transform: rotateY(180deg); /* Flip the super-cell */
 }
+
+/* force-disable clicks after game over */
+.game-board.game-over,
+.game-board.game-over .super-cell,
+.game-board.game-over .cell {
+  pointer-events: none !important;
+  cursor: default !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  user-select: none !important;
+}
+
+/* keep locked rotated super-cells visible */
+.super-cell.locked-rotated {
+  transform: rotateY(180deg) !important;
+  transition: none !important;
+  z-index: 2000 !important;
+}
+.super-cell.locked-rotated .back {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.super-cell.locked-rotated .sub-board {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
