@@ -1,3 +1,9 @@
+:root {
+  --accent-purple: #9b8cff;       /* light purple */
+  --accent-purple-light: #dcd6ff; /* lighter on elements */
+  --accent-purple-lighter: #efeaff; /* very light hover */
+}
+
 html, body {
   padding: 0;
   margin: 0;
@@ -6,12 +12,34 @@ html, body {
   display: flex;
   font-family: Arial, Helvetica, sans-serif;
   align-items: center;
+  background-color: var(--accent-purple-lighter);
 }
 
 h1 {
   text-align: center;
   width: 100%;
   margin-top: 0px;
+}
+h1 > span {
+  display: inline-block;
+  line-height: 1;
+  font-size: 2.5rem;
+  vertical-align: middle;
+  will-change: transform;
+}
+
+.span0,
+.span1 {
+  animation: bobbing 3s ease-in-out infinite;
+}
+
+.span0 { animation-delay: 0s; }
+.span1 { animation-delay: 0.12s; }
+
+@keyframes bobbing {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
 }
 
 .game-board {
@@ -20,9 +48,9 @@ h1 {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 5px;
-  border: 2px solid #a5b5cb;
-  background: #f9fafb;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  /* border: 2px solid rgba(37,99,235,0.28); */
+  background-color: var(--accent-purple-lighter);
+  box-shadow: 5px 5px 5px 5px rgba(0, 0, 0, 0.415);
   box-sizing: border-box;
   width: 600px;
   height: 600px;
@@ -40,7 +68,7 @@ h1 {
   height: 100%;
   box-sizing: border-box;
   transform-style: preserve-3d; /* Enables 3D transforms */
-  transition: transform 0.6s; /* Smooth flip animation */
+  transition: transform 6s ease-in-out; /* Smooth flip: 6s ease-in-out */
   cursor: pointer;
 }
 
@@ -62,14 +90,36 @@ h1 {
 }
 
 .back {
-  background-color: #f87171; /* Red for back face */
-  transform: rotateY(180deg); /* Rotate back face 180 degrees initially */
+  /* keep layout but allow winner classes to override color */
+  background-color: transparent;
+  transform: rotateY(180deg);
   display: flex;
   justify-content: center;
   align-items: center;
   color: white;
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 7rem; /* increased size */
+  box-sizing: border-box;
+}
+
+/* winner-specific back colors (override .back) */
+.super-cell.won-x .back {
+  background-color: #ef4444; /* red for X */
+  color: white;
+  font-size: 9rem;
+}
+
+.super-cell.won-o .back {
+  background-color: #2563eb; /* blue for O */
+  color: white;
+  font-weight: bolder;
+}
+
+/* draw styling: blend of #ef4444 and #2563eb -> #8A5498 */
+.super-cell.draw .back {
+  background-color: #8A5498;
+  color: #ffffff;
+  font-size: 9rem;
+  font-weight: bolder;
 }
 
 .cell {
@@ -88,7 +138,7 @@ h1 {
 }
 
 .cell:hover {
-  background: #e5e7eb;
+  background: var(--accent-purple-light); /* lighter purple on hover */
 }
 
 /* highlight allowed super-cell for next move */
@@ -106,7 +156,7 @@ h1 {
 
 /* ensure smooth transition for border, shadow and position */
 .super-cell {
-    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 1.0s ease-in-out;
 }
 
 @media (max-width: 640px) {
@@ -125,4 +175,7 @@ h1 {
   .cell {
     font-size: 0.375rem;
   }
+}
+.rotated {
+  transform: rotateY(180deg); /* Flip the super-cell */
 }

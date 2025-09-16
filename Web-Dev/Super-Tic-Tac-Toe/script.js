@@ -1,11 +1,30 @@
 $(window).on("load", function () {
     const gameBoard = $("#game-board");
     createSuperBoard(gameBoard);
+    animateTitle();
+    
 
     gameBoard.on("click", ".super-cell", function () {
         clickLogic();
     });
 });    
+
+function animateTitle() {
+    const title = "Super-Tic-Tac-Toe";
+    const charArray = [...title];
+    for (let i = 0; i < charArray.length; i++) {
+        const span = $("<span>").text(charArray[i]);
+        if (i % 2 === 0) {
+            span.css("color", "#ef4444");
+            span.addClass("span0"); 
+        }else {
+            span.css("color", "#2563eb");
+            span.addClass("span1"); 
+        }
+        // span.css("animation-delay", `${i * 0.1}s`);
+        $("#title").append(span);
+    }
+}    
 
 const gameState = {
     board: Array(3).fill(null).map(() => Array(3).fill(null)), // 3x3 board for super cells
@@ -16,39 +35,40 @@ const gameState = {
 };
 globalThis.gameState = gameState;
 
-
-// const audioFiles = [
-//   'pop.mp3',
-//   'swoosh.mp3',
-//   'defeat.mp3',
-//   'draw.mp3',
-//   'victory.mp3'
-// ];
-// globalThis.sounds = {};
-// audioFiles.forEach(filename => {
-//   const key = filename.replace(/\.[^/.]+$/, '')
-//   const src = `./audio/${filename}`;
-//   try {
-//     const a = new Audio(src);
-//     a.preload = 'auto';
-//     a.load();
-//     a.volume = 0.5; 
-//     globalThis.sounds[key] = a;
-//   } catch (err) {}
-// });
-// // keep legacy click alias if pop exists, otherwise fallback to first loaded sound
-// globalThis.click = globalThis.sounds.pop || Object.values(globalThis.sounds)[0] || null;
-// // safe play helper
-// globalThis.playSound = function (name) {
-//   const snd = globalThis.sounds && globalThis.sounds[name];
-//   if (!snd) return;
-//   try {
-//     snd.currentTime = 0;
-//     snd.play();
-//   } catch (err) {
-//     console.warn(`Failed to play sound ${name}:`, err);
-//   }
-// };
+// preload audio files and expose globally
+const audioFiles = [
+  'pop.mp3',
+  'swoosh.mp3',
+  'defeat.mp3',
+  'draw.mp3',
+  'victory.mp3'
+];
+globalThis.sounds = {};
+audioFiles.forEach(filename => {
+  const key = filename.replace(/\.[^/.]+$/, ''); // e.g. "pop"
+  const src = `./audio/${filename}`;
+  try {
+    const a = new Audio(src);
+    a.preload = 'auto';
+    a.load();
+    a.volume = 0.6;
+    globalThis.sounds[key] = a;
+  } catch (err) {
+    console.warn('Audio load failed', src, err);
+  }
+});
+// legacy alias and safe play helper
+globalThis.click = globalThis.sounds.pop || Object.values(globalThis.sounds)[0] || null;
+globalThis.playSound = function (name) {
+  const snd = globalThis.sounds && globalThis.sounds[name];
+  if (!snd) return;
+  try {
+    snd.currentTime = 0;
+    snd.play();
+  } catch (err) {
+    // autoplay policy may block; ignore
+  }
+};
 
 function clickLogic() {
     // ensure we don't bind multiple handlers
@@ -61,6 +81,12 @@ function clickLogic() {
         const superAttr = cell.closest('.super-cell').attr('data-super-cell'); // "R,C"
         const cellTuple = cellAttr.split(',').map(Number); // [r, c]
         const superTuple = superAttr.split(',').map(Number); // [R, C]
+
+        // disallow clicks in a super-cell that has already been won
+        if (gameState.superCellWinners[superTuple[0]][superTuple[1]]) {
+            console.log('That super-cell is already won.');
+            return;
+        }
 
         // validate against restrictToSuperCell (first move unrestricted when null)
         const restrict = gameState.restrictToSuperCell;
@@ -78,10 +104,10 @@ function clickLogic() {
         // restrict next move to the small-cell's coordinates (tuple)
         gameState.restrictToSuperCell = cellTuple;
 
-        // if target super-cell (the one pointed by cellTuple) has no empty cells, clear restriction
+        // if target super-cell (the one pointed by cellTuple) has no empty cells or is already won, clear restriction
         const targetSelector = `.super-cell[data-super-cell="${cellTuple[0]},${cellTuple[1]}"]`;
         const $targetSuper = $(targetSelector);
-        if ($targetSuper.length && $targetSuper.find('.cell.empty').length === 0) {
+        if ($targetSuper.length && ($targetSuper.find('.cell.empty').length === 0 || gameState.superCellWinners[cellTuple[0]][cellTuple[1]])) {
             gameState.restrictToSuperCell = null; // unrestricted next move
         }
 
@@ -90,6 +116,92 @@ function clickLogic() {
 
         console.log(`superCell: ${superAttr} | cell: ${cellAttr}`);
     });
+}
+
+// ensure a 3x3 matrix exists for a super-cell in gameState.board
+function ensureSuperMatrix(SR, SC) {
+    if (!Array.isArray(gameState.board[SR][SC]) || !Array.isArray(gameState.board[SR][SC][0])) {
+        gameState.board[SR][SC] = Array(3).fill(null).map(() => Array(3).fill(null));
+    }
+}
+
+// read sub-board state from DOM into a 3x3 matrix of 'X' | 'O' | null
+function getSubBoardMatrix(superTuple) {
+    const [SR, SC] = superTuple;
+    const mat = Array(3).fill(null).map(() => Array(3).fill(null));
+    const $super = $(`.super-cell[data-super-cell="${SR},${SC}"]`);
+    $super.find('.cell').each(function () {
+        const $c = $(this);
+        const attr = $c.attr('data-cell');
+        if (!attr) return;
+        const [r, cidx] = attr.split(',').map(Number);
+        const txt = $c.text().trim();
+        if (txt === 'X' || $c.hasClass('x-move')) mat[r][cidx] = 'X';
+        else if (txt === 'O' || $c.hasClass('o-move') || txt === '◯') mat[r][cidx] = 'O';
+    });
+    return mat;
+}
+
+// check a super-cell for a winner and handle win (flip, record, set back text)
+function checkAndHandleSuperWin(superTuple) {
+    const [SR, SC] = superTuple;
+    // already handled?
+    if (gameState.superCellWinners[SR][SC]) return;
+
+    const mat = getSubBoardMatrix(superTuple);
+    const winner = calculateWinner(mat);
+    const $super = $(`.super-cell[data-super-cell="${SR},${SC}"]`);
+    const $back = $super.find('.back');
+
+    if (winner) {
+        // record winner
+        gameState.superCellWinners[SR][SC] = winner;
+
+        // set back text and class
+        if ($back.length) {
+            const symbol = winner === 'X' ? 'X' : '◯';
+            $back.html(symbol);
+        }
+        $super.addClass(winner === 'X' ? 'won-x' : 'won-o');
+
+        // play swoosh and flip
+        if (globalThis.playSound) try { globalThis.playSound('swoosh'); } catch(e) {}
+        rotateSubBoard($super);
+
+    } else {
+        // check draw: no nulls left
+        const isFull = mat.flat().every(v => v === 'X' || v === 'O');
+        if (isFull) {
+            // mark draw in state
+            gameState.superCellWinners[SR][SC] = 'D';
+
+            // style back for draw and set text
+            if ($back.length) {
+                $back.html('=');
+            }
+            $super.addClass('draw');
+
+            // play swoosh and flip
+            if (globalThis.playSound) try { globalThis.playSound('swoosh'); } catch(e) {}
+            rotateSubBoard($super);
+
+            // clear restriction if it pointed here
+            if (gameState.restrictToSuperCell && gameState.restrictToSuperCell[0] === SR && gameState.restrictToSuperCell[1] === SC) {
+                gameState.restrictToSuperCell = null;
+            }
+        }
+    }
+
+    // if restriction was pointing to this now-won/drawn super-cell, clear it
+    if (gameState.restrictToSuperCell && (gameState.superCellWinners[SR][SC])) {
+        gameState.restrictToSuperCell = null;
+    }
+
+    // refresh allowed highlight state
+    updateAllowedHighlight();
+
+    // call this after any super-cell result to evaluate overall game
+    checkOverallGameResult();
 }
 
 // helpers to manage allowed highlight
@@ -170,24 +282,19 @@ function rotateSubBoard(superCell) {
 
 function setMove(cell, player, superTuple, cellTuple) {
     // update UI
-    cell.text(player);
+    const color = player === 'X' ? '#ef4444' : '#2563eb'; // match highlight colors
+    const symbol = player === 'X' ? 'X' : 'O'; // normal X (better contrast) and hollow O
+    cell.text(symbol);
     cell.css('transition', 'color 0.3s, font-size 0.3s');
-    cell.css('color', player === 'X' ? 'red' : 'blue');
+    cell.css('color', color);
     cell.css('font-size', '3rem');
     cell.removeClass('empty');
     cell.addClass(player === 'X' ? 'x-move' : 'o-move');
 
-    // store the tuple inside the corresponding super-cell entry in gameState.board
+    // store the move inside the corresponding super-cell entry in gameState.board as a 3x3 matrix
     const [SR, SC] = superTuple;
-    // initialize container for moves in this super-cell if needed
-    if (!Array.isArray(gameState.board[SR][SC])) {
-        gameState.board[SR][SC] = []; // will hold tuples like [r,c]
-    }
-    // push the cell tuple (avoid duplicates)
-    const existing = gameState.board[SR][SC].some(t => t[0] === cellTuple[0] && t[1] === cellTuple[1]);
-    if (!existing) {
-        gameState.board[SR][SC].push(cellTuple);
-    }
+    ensureSuperMatrix(SR, SC);
+    gameState.board[SR][SC][cellTuple[0]][cellTuple[1]] = player;
 
     // play sound if available
     if (globalThis.click) {
@@ -196,4 +303,81 @@ function setMove(cell, player, superTuple, cellTuple) {
             globalThis.click.play();
         } catch (err) {}
     }
+
+    // after making the move, check if this super-cell was won
+    checkAndHandleSuperWin(superTuple);
+}
+
+// return 'X' / 'O' if either has 3-in-a-row among superCellWinners, else null
+function calculateSuperWinner() {
+    const board = gameState.superCellWinners;
+    const winningCombinations = [
+        // Rows
+        [[0,0],[0,1],[0,2]],
+        [[1,0],[1,1],[1,2]],
+        [[2,0],[2,1],[2,2]],
+        // Cols
+        [[0,0],[1,0],[2,0]],
+        [[0,1],[1,1],[2,1]],
+        [[0,2],[1,2],[2,2]],
+        // Diags
+        [[0,0],[1,1],[2,2]],
+        [[0,2],[1,1],[2,0]]
+    ];
+    for (const combo of winningCombinations) {
+        const [a,b,c] = combo;
+        const va = board[a[0]][a[1]];
+        const vb = board[b[0]][b[1]];
+        const vc = board[c[0]][c[1]];
+        if ((va === 'X' || va === 'O') && va === vb && va === vc) return va;
+    }
+    return null;
+}
+
+// improved overall game check: first check ordered 3-in-row, otherwise when all super-cells decided
+function checkOverallGameResult() {
+    if (gameState.isGameOver) return;
+
+    const $board = $('#game-board');
+
+    // 1) check ordered 3-in-a-row across super cells
+    const lineWinner = calculateSuperWinner();
+    if (lineWinner === 'X') {
+        gameState.isGameOver = true;
+        $board.addClass('flipped game-won-x').removeClass('game-won-o game-draw');
+        if (globalThis.playSound) try { globalThis.playSound('victory'); } catch (e) {}
+        return;
+    }
+    if (lineWinner === 'O') {
+        gameState.isGameOver = true;
+        $board.addClass('flipped game-won-o').removeClass('game-won-x game-draw');
+        if (globalThis.playSound) try { globalThis.playSound('defeat'); } catch (e) {}
+        return;
+    }
+
+    // 2) if no ordered winner, when all super-cells are decided -> compare counts (ignore 'D' entries)
+    const flat = gameState.superCellWinners.flat();
+    const decidedCount = flat.filter(v => v !== null).length;
+    if (decidedCount === 9) {
+        const xCount = flat.filter(v => v === 'X').length;
+        const oCount = flat.filter(v => v === 'O').length;
+
+        gameState.isGameOver = true;
+        if (xCount === oCount) {
+            $board.addClass('flipped game-draw').removeClass('game-won-x game-won-o');
+            if (globalThis.playSound) try { globalThis.playSound('draw'); } catch (e) {}
+            return;
+        }
+        if (xCount > oCount) {
+            $board.addClass('flipped game-won-x').removeClass('game-won-o game-draw');
+            if (globalThis.playSound) try { globalThis.playSound('victory'); } catch (e) {}
+            return;
+        } else {
+            $board.addClass('flipped game-won-o').removeClass('game-won-x game-draw');
+            if (globalThis.playSound) try { globalThis.playSound('defeat'); } catch (e) {}
+            return;
+        }
+    }
+
+    // otherwise no overall result yet
 }
