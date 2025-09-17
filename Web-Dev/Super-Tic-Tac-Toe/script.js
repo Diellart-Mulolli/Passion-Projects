@@ -2,6 +2,11 @@ $(window).on("load", function () {
     const gameBoard = $("#game-board");
     createSuperBoard(gameBoard);
     animateTitle();
+    // animate navbar labels
+    $(".sidebar .label").each(function () {
+        const $lab = $(this);
+        animateBobbingText($lab, $lab.text());
+    });
     
 
     gameBoard.on("click", ".super-cell", function () {
@@ -481,4 +486,30 @@ async function endGameAfterFlips(resultLabel) {
   await waitForAllRotationsToFinish(6100);
   // then finalize end game
   endGame(resultLabel);
+}
+
+// Generic function to animate any text element with the same bobbing effect
+function animateBobbingText($el, text) {
+    const charArray = [...String(text)];
+    $el.empty();
+    for (let i = 0; i < charArray.length; i++) {
+        const ch = charArray[i];
+        const span = $("<span>").text(ch);
+        // add bobbing classes
+        if (i % 2 === 0) span.addClass("span0");
+        else span.addClass("span1");
+
+        // color spans like the title: red / blue
+        const red = '#ef4444';
+        const blue = '#2563eb';
+        span.css('color', i % 2 === 0 ? red : blue);
+
+        // preserve spaces by using a non-breaking space inside a span
+        if (ch === ' ') {
+            span.html('&nbsp;');
+            // keep space spans but don't visually bob as much
+            span.addClass('space');
+        }
+        $el.append(span);
+    }
 }
