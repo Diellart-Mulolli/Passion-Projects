@@ -12,15 +12,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 6px;
+  padding: 10px 6px;
   gap: 8px;
   transition: width 200ms ease, background 200ms ease;
   z-index: 3000; /* ensure it's above the board but doesn't affect layout */
-  box-shadow: 0 8px 24px rgba(15, 12, 40, 0.18), 0 2px 6px rgba(0,0,0,0.08);
+  box-shadow: 10px 10px 10px rgba(15, 12, 40, 0.18) , 0 2px 6px rgba(0,0,0,0.08);
+
 }
 
 .sidebar:hover {
-  width: 200px !important; /* expanded width */
+  width: 240px !important; /* expanded width */
   background: #764fa3; /* darker purple on hover, keep purple */
 }
 
@@ -53,6 +54,17 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
+  border: 3px solid rgba(255,255,255,0.12);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.sidebar a:hover .icon {
+  transition: 120ms ease;
+  background: var(--accent-purple);
+}
+.sidebar a:hover .label {
+  transition: 300ms ease;
+  border: 3px solid var(--accent-purple);
+  background-color: var(--accent-purple-light);
 }
 
 .sidebar .label {
@@ -65,16 +77,22 @@
   
 }
 .label{
-  background-color:var(--accent-purple-light);
-  padding:10px;
-  border-radius: 20px;
+  background-color:var(--accent-purple-lighter);
+  border: 3px solid rgba(255,255,255,0.12);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  padding:7px;
+  padding-top:10px;
+  border-radius: 15px;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  width:100% !important;
 }
 .label span{
   position: relative;
   top:2px;
+}
+span{
+  font-weight: 900;
 }
 
 .sidebar:hover .label {
