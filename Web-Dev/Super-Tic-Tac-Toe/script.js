@@ -515,3 +515,17 @@ function animateBobbingText($el, text) {
         $el.append(span);
     }
 }
+
+function resetGame() {
+    // reset game state
+    gameState.board = Array(3).fill(null).map(() => Array(3).fill(null));
+    gameState.currentPlayer = 'X';
+    gameState.superCellWinners = Array(3).fill(null).map(() => Array(3).fill(null));
+    gameState.isGameOver = false;
+    gameState.restrictToSuperCell = null;
+    // recreate board
+    const gameBoard = $("#game-board");
+    createSuperBoard(gameBoard);
+    console.clear();
+    console.log('Game reset. New game started.');
+}

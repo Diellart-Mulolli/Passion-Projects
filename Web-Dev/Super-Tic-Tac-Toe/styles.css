@@ -239,7 +239,6 @@ h1 > span {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  background-color: lightgray;
 }
 
 .back {
@@ -359,7 +358,36 @@ h1 > span {
   pointer-events: none !important;
 }
 
+
+/* Maybe see these later */
+/* Secons one has to round the highlights aswell */
+
 /* .move-contaner{
   position: relative;
   top: 300%;
 } */
+
+/* .cell[data-cell='0,0']{
+  border-top-left-radius: 20px;
+}
+.back[sub-board-back='0,0']{
+  border-top-left-radius: 20px;
+} 
+.cell[data-cell='0,2']{
+  border-top-right-radius: 20px;
+}
+.back[sub-board-back='0,2']{
+  border-top-right-radius: 20px;
+} 
+.cell[data-cell='2,0']{
+  border-bottom-left-radius: 20px;
+}
+.back[sub-board-back='2,0']{
+  border-bottom-left-radius: 20px;
+} 
+.cell[data-cell='2,2']{
+  border-bottom-right-radius: 20px;
+}
+.back[sub-board-back='2,2']{
+  border-bottom-right-radius: 20px;
+}  */
