@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rules</title>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="./rules.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+    
+    <div class="container">
+        <nav>
+            <div class="back-link">
+                <a href="./index.html" text="Back" title="Back">
+                    <p>
+                        Back
+                    </p>
+                    <i class="fa fa-chevron-circle-left" aria-hidden="true">
+                    </i>
+                </a>
+            </div>
+            <h1 id="Title" class="text-4xl font-bold mb-4 text-center">Game-Rules</h1>
+        </nav>
+        <div class="rule">
+            <div class="marked"><strong>The goal</strong></div>
+            <div class="rule-text"> 
+                To win three small boards in a row (horizontally, vertically, or diagonally) on the large grid, just like in regular Tic-Tac-Toe. A player wins a small board by getting three of their symbols in a row (horizontally, vertically, or diagonally) within that 3x3 small board.
+            <ul>
+                <li>Once a small board is won by a player, that entire small board is marked as belonging to that player on the large grid (e.g., the whole small board becomes "X" or "O").</li>
+                <li>The first player to achieve three won small boards in a row on the large grid wins the game.</li>
+                <li>If the large grid fills up without either player achieving three in a row, the number of boards won is counted (boards drawn are not counted towards any player) and the one that has more wins , if they are the same the game is a draw.</li>
+            </ul>
+            </div>
+        </div>
+
+        <div class="rule">
+            <div class="marked">
+                <strong>
+                    First Move:
+                </strong>
+            </div>
+            <div class="rule-text">
+                The starting player (X) can place their symbol in any empty space on any of the 9 small boards.
+            </div>
+        </div>
+
+        <div class="rule">
+            <div class="marked">
+                <strong>
+                    Subsequent Moves:
+                </strong>
+            </div>
+            <div class="rule-text">
+                The first move, the position of the opponent's previous move determines which small board the current player must play in.
+                <ul>
+                    <li>The large grid is divided like a Tic-Tac-Toe board: top-left, top-center, top-right, middle-left, etc.</li>
+                    <li>If the opponent plays in the top-left space of their small board, you must play in the top-left small board on the large grid.</li>
+                    <li>If the opponent plays in the center space, you must play in the center small board, and so on.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rule">
+            <div class="marked">
+                <strong>
+                    Exception for Invalid Boards:
+                </strong>
+            </div>
+            <div class="rule-text"> 
+                If the required small board is already won (by either player) or completely full (tied or drawn), the current player gets a "free choice" and can play in any empty space on any unfinished small board.
+            </div>
+        </div>
+
+        <div class="rule">
+            <div class="marked">
+                <strong>
+                    Winning a Small Board:
+                </strong>
+            </div>
+            <div class="rule-text">
+                A small board is won as soon as a player gets three symbols in a row within it. Once won, no more moves can be made in that small board, and it counts as a single mark for that player on the large grid.
+            </div>
+        </div>
+        
+        <div class="rule">
+            <div class="marked">
+                <strong>
+                    Ties in Small Boards:
+                </strong>
+            </div>
+            <div class="rule-text">
+                If a small board fills up without a winner (all 9 spaces filled, no three in a row), it is considered a tie. Tied boards do not count toward either player's three-in-a-row on the large grid but still block further play in that board.
+            </div>
+        </div>
+
+    <script>
+        $(document).ready(function() {
+            const title = $("#Title");
+            animateBobbingText(title, title.text());
+            const mark = $(".marked");
+            array.forEach(mark => {
+                animateBobbingText($(mark), $(mark).text());
+            });
+
+            const backLink = $(".back-link a");
+            backLink.on("click", function(event){
+                event.preventDefault();
+                extendlink();
+            });
+        });
+
+        function extendlink(){
+            window.location.href = "./index.html";
+        }
+
+        function animateBobbingText($el, text) {
+            const charArray = [...String(text)];
+            $el.empty();
+            for (let i = 0; i < charArray.length; i++) {
+                const ch = charArray[i];
+                const span = $("<span>").text(ch);
+                // add bobbing classes
+                if (i % 2 === 0) span.addClass("span0");
+                else span.addClass("span1");
+
+                // color spans like the title: red / blue
+                const red = '#ef4444';
+                const blue = '#2563eb';
+                span.css('color', i % 2 === 0 ? red : blue);
+                span.css('font-weight', 'bolder');
+                // preserve spaces by using a non-breaking space inside a span
+                if (ch === ' ') {
+                    span.html('&nbsp;');
+                    // keep space spans but don't visually bob as much
+                }
+                $el.append(span);
+            }
+        }
+    </script>
+</body>
+</html>

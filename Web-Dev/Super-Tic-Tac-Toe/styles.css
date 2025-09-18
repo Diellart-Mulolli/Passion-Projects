@@ -17,7 +17,6 @@
   transition: width 200ms ease, background 200ms ease;
   z-index: 3000; /* ensure it's above the board but doesn't affect layout */
   box-shadow: 10px 10px 10px rgba(15, 12, 40, 0.18) , 0 2px 6px rgba(0,0,0,0.08);
-
 }
 
 .sidebar:hover {
@@ -65,6 +64,9 @@
   transition: 300ms ease;
   border: 3px solid var(--accent-purple);
   background-color: var(--accent-purple-light);
+}
+.sidebar a:hover > * {
+  text-shadow: 2px 2px var(--accent-purple);
 }
 
 .sidebar .label {
@@ -160,6 +162,7 @@ html, body {
   font-family: Arial, Helvetica, sans-serif;
   align-items: center;
   background-color: var(--accent-purple-lighter);
+  overflow: hidden;
 }
 
 h1 {
@@ -190,12 +193,13 @@ h1 > span {
 }
 
 .game-board {
+  position: relative;
+  left:1em;
   display: grid;
   background-color: lightsteelblue;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 5px;
-  /* border: 2px solid rgba(37,99,235,0.28); */
   background-color: var(--accent-purple-lighter);
   box-shadow: 5px 5px 5px 5px rgba(0, 0, 0, 0.415);
   box-sizing: border-box;
@@ -204,6 +208,7 @@ h1 > span {
   max-width: 90vw;
   max-height: 90vh;
   padding: 7px;
+  border:1.5px solid black;
   border-radius: 7px;
   perspective: 1000px; /* Creates 3D space for flip effect */
 }
@@ -353,3 +358,8 @@ h1 > span {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* .move-contaner{
+  position: relative;
+  top: 300%;
+} */

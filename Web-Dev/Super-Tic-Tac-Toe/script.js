@@ -430,6 +430,7 @@ function endGame(resultLabel) {
   // pretty-print final game state
   try {
     console.log('Game finished:', resultLabel);
+    alert('Game finished: ' + resultLabel);
     console.log(JSON.stringify(gameState, null, 2));
   } catch (e) {
     console.log('Game finished (could not stringify):', resultLabel, gameState);
@@ -503,6 +504,7 @@ function animateBobbingText($el, text) {
         const red = '#ef4444';
         const blue = '#2563eb';
         span.css('color', i % 2 === 0 ? red : blue);
+        // span.css('text-shadow', `2px 2px 4px ${i % 2 === 0 ? red : blue}`);
 
         // preserve spaces by using a non-breaking space inside a span
         if (ch === ' ') {

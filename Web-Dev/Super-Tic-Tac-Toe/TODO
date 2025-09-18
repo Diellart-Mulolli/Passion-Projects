@@ -1,8 +1,10 @@
 BUGS:
-
+    the function for waiting for flipping is slowing the program too much for the win alert
+    
 FEATURES TO BE ADDED:
     buttons for game reseting 
     audio toggles with cookies in PHP
+    format code
 
 HARDER:
     AI/ML
