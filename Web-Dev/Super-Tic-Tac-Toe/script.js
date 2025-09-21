@@ -8,12 +8,7 @@ $(window).on("load", function () {
         animateBobbingText($lab, $lab.text());
     });
     
-    const $buttons = $(".sidebar > a");
-    console.log($buttons)
-    const $buttonArray = [...$buttons]
-
-    handleHoverSound($buttonArray)
-    handleCickSound($buttonArray)
+    handleAnchor([...$(".sidebar > a")])
 
     gameBoard.on("click", ".super-cell", function () {
         clickLogic();
@@ -557,12 +552,21 @@ function handleHoverSound($array = []) {
     });
 }
 
-function handleCickSound($array = []) {
+
+function handleAnchor($array = []){
     // Ensure $array is a jQuery object; if not, convert it
     const $elements = $($array);
-    
     // Iterate over jQuery collection using .each()
     $elements.each(function() {
+        $(this).hover(function(e) {
+            e.preventDefault()
+            try {
+                globalThis.click.currentTime = 0; // Reset audio to start
+                globalThis.playSound("hover_button"); // Play the sound
+            } catch (err) {
+                console.error(`Error playing sound: ${err.message}`);
+            }
+        });
         $(this).click(function(e) {
             e.preventDefault()
             try {
@@ -574,5 +578,4 @@ function handleCickSound($array = []) {
             window.location.href = $(this).attr('href');
         });
     });
-    
 }
