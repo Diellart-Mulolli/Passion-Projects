@@ -1,8 +1,10 @@
 BUGS:
     the function for waiting for flipping is slowing the program too much for the win alert
+    game reseting doesnt load other game (O winning maybe ??)
     
 FEATURES TO BE ADDED:
-    buttons for game reseting 
+    Random AI named Randy Random
+    
     audio toggles with cookies in PHP
     format code and (folders)
 

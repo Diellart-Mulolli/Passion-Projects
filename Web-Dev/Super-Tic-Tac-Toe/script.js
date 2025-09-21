@@ -8,10 +8,17 @@ $(window).on("load", function () {
         animateBobbingText($lab, $lab.text());
     });
     
+    const $buttons = $(".sidebar > a");
+    console.log($buttons)
+    const $buttonArray = [...$buttons]
+
+    handleHoverSound($buttonArray)
+    handleCickSound($buttonArray)
 
     gameBoard.on("click", ".super-cell", function () {
         clickLogic();
     });
+
 });    
 
 function animateTitle() {
@@ -46,7 +53,9 @@ const audioFiles = [
   'swoosh.mp3',
   'defeat.mp3',
   'draw.mp3',
-  'victory.mp3'
+  'victory.mp3',
+  'hover_button.mp3',
+  'click.mp3'
 ];
 globalThis.sounds = {};
 audioFiles.forEach(filename => {
@@ -443,7 +452,7 @@ function delay(ms) {
 }
 
 // wait for transform transitionend on a single element (or timeout)
-function waitForTransformEnd($el, timeout = 6500) {
+function waitForTransformEnd($el, timeout = 4500) {
   return new Promise(resolve => {
     if (!$el || $el.length === 0) return resolve();
     const el = $el.get ? $el.get(0) : $el;
@@ -484,7 +493,7 @@ async function endGameAfterFlips(resultLabel) {
   // small micro-delay so class toggles have applied
   await delay(10);
   // wait for any rotating super-cells to complete (each has 6000ms CSS)
-  await waitForAllRotationsToFinish(6100);
+  await waitForAllRotationsToFinish(4500);
   // then finalize end game
   endGame(resultLabel);
 }
@@ -528,4 +537,42 @@ function resetGame() {
     createSuperBoard(gameBoard);
     console.clear();
     console.log('Game reset. New game started.');
+}
+
+function handleHoverSound($array = []) {
+    // Ensure $array is a jQuery object; if not, convert it
+    const $elements = $($array);
+    
+    // Iterate over jQuery collection using .each()
+    $elements.each(function() {
+        $(this).hover(function(e) {
+            e.preventDefault()
+            try {
+                globalThis.click.currentTime = 0; // Reset audio to start
+                globalThis.playSound("hover_button"); // Play the sound
+            } catch (err) {
+                console.error(`Error playing sound: ${err.message}`);
+            }
+        });
+    });
+}
+
+function handleCickSound($array = []) {
+    // Ensure $array is a jQuery object; if not, convert it
+    const $elements = $($array);
+    
+    // Iterate over jQuery collection using .each()
+    $elements.each(function() {
+        $(this).click(function(e) {
+            e.preventDefault()
+            try {
+                globalThis.click.currentTime = 0; // Reset audio to start
+                globalThis.playSound("click"); // Play the sound
+            } catch (err) {
+                console.error(`Error playing sound: ${err.message}`);
+            }
+            window.location.href = $(this).attr('href');
+        });
+    });
+    
 }

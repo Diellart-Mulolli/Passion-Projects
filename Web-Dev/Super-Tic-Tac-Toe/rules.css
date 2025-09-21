@@ -51,20 +51,21 @@ h1 > span {
 }
 
 .rule {
-  background-color: var(--accent-purple-light);
+  background-color: var(--accent-purple-lighter);
   border: 2px solid var(--accent-purple);
   border-radius: 8px;
   margin: 0.5rem auto;
   padding: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: -1px 3px 3px var(--accent-purple);
   width: 90%;
-  line-height: 0.7
+  line-height: 0.8;
+  transition: 100ms ease;
 }
 .rule:hover{
     /* transform: scale(1.02); */
     transition: 200ms ease-in-out;
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
     transform: translateY(-4px);
+    box-shadow: -1px 1px 1px var(--accent-purple);
 }
 .rule ul {
     margin:0;
@@ -91,23 +92,24 @@ h1 > span {
 }
 .back-link {
   position: relative;
-  top:4px !important;
+  top:15px !important;
   font-size: 2rem;
-  background-color: var(--accent-purple-lighter);
+  background-color: var(--accent-purple-light);
   color:white;
   border-bottom-right-radius: 30px;
   text-decoration: none;
   display: inline;
   /* border: 2px solid var(--accent-purple); */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 3px 3px 3px var(--accent-purple);
   padding:15px;
   z-index: 10;
+  transition: 100ms ease;
 }
 .back-link:hover {
   background-color: var(--accent-purple);
   color: white;
   transition: 200ms ease-in-out;
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 1px 1px 1px var(--accent-purple-light);
   transform: translateY(-4px);
   text-decoration: none;
 }
@@ -134,6 +136,7 @@ h1 > span {
   transition: 150ms ease-in-out;
   display: inline;
 }
+
 i{
   color:white;
 }
