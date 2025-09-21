@@ -81,6 +81,7 @@ globalThis.playSound = function (name) {
 
 function clickLogic() {
     // prevent binding/handling if game is finished or pending finalization
+    //console.log("Click")
     if (gameState.isGameOver) return;
 
     // ensure we don't bind multiple handlers
@@ -363,14 +364,14 @@ function checkOverallGameResult() {
     if (lineWinner === 'X') {
         // lock game immediately to prevent extra moves while awaiting flips/finalization
         gameState.isGameOver = true;
-        $board.addClass('flipped game-won-x').removeClass('game-won-o game-draw');
+        $board.addClass('game-won-x').removeClass('game-won-o game-draw');
         if (globalThis.playSound) try { globalThis.playSound('victory'); } catch (e) {}
         endGameAfterFlips('X-line-win');
         return;
     }
     if (lineWinner === 'O') {
         gameState.isGameOver = true;
-        $board.addClass('flipped game-won-o').removeClass('game-won-x game-draw');
+        $board.addClass('game-won-o').removeClass('game-won-x game-draw');
         if (globalThis.playSound) try { globalThis.playSound('defeat'); } catch (e) {}
         endGameAfterFlips('O-line-win');
         return;
@@ -387,18 +388,18 @@ function checkOverallGameResult() {
         const oCount = flat.filter(v => v === 'O').length;
 
         if (xCount === oCount) {
-            $board.addClass('flipped game-draw').removeClass('game-won-x game-won-o');
+            $board.addClass('game-draw').removeClass('game-won-x game-won-o');
             if (globalThis.playSound) try { globalThis.playSound('draw'); } catch (e) {}
             endGameAfterFlips('draw-count-equal');
             return;
         }
         if (xCount > oCount) {
-            $board.addClass('flipped game-won-x').removeClass('game-won-o game-draw');
+            $board.addClass('game-won-x').removeClass('game-won-o game-draw');
             if (globalThis.playSound) try { globalThis.playSound('victory'); } catch (e) {}
             endGameAfterFlips('x-more-supercells');
             return;
         } else {
-            $board.addClass('flipped game-won-o').removeClass('game-won-x game-draw');
+            $board.addClass('game-won-o').removeClass('game-won-x game-draw');
             if (globalThis.playSound) try { globalThis.playSound('defeat'); } catch (e) {}
             endGameAfterFlips('o-more-supercells');
             return;
@@ -417,7 +418,7 @@ function endGame(resultLabel) {
   $(".super-cell").off("click");
 
   // remove any delegated handlers on the board and document
-  $("#game-board").off(); // removes delegated handlers bound to #game-board
+//   $("#game-board").off(); // removes delegated handlers bound to #game-board
   $(document).off("click", ".cell");
   $(document).off("click", ".super-cell");
 
@@ -435,7 +436,7 @@ function endGame(resultLabel) {
   try {
     console.log('Game finished:', resultLabel);
     alert('Game finished: ' + resultLabel);
-    console.log(JSON.stringify(gameState, null, 2));
+    console.table(JSON.stringify(gameState, null, 2));
   } catch (e) {
     console.log('Game finished (could not stringify):', resultLabel, gameState);
   }
@@ -447,7 +448,7 @@ function delay(ms) {
 }
 
 // wait for transform transitionend on a single element (or timeout)
-function waitForTransformEnd($el, timeout = 4500) {
+function waitForTransformEnd($el, timeout = 2500) {
   return new Promise(resolve => {
     if (!$el || $el.length === 0) return resolve();
     const el = $el.get ? $el.get(0) : $el;
@@ -488,7 +489,7 @@ async function endGameAfterFlips(resultLabel) {
   // small micro-delay so class toggles have applied
   await delay(10);
   // wait for any rotating super-cells to complete (each has 6000ms CSS)
-  await waitForAllRotationsToFinish(4500);
+  await waitForAllRotationsToFinish(1500);
   // then finalize end game
   endGame(resultLabel);
 }
@@ -529,29 +530,14 @@ function resetGame() {
     gameState.restrictToSuperCell = null;
     // recreate board
     const gameBoard = $("#game-board");
+    gameBoard.removeClass("game-over game-won-x game-won-o game-draw")
     createSuperBoard(gameBoard);
     console.clear();
     console.log('Game reset. New game started.');
-}
-
-function handleHoverSound($array = []) {
-    // Ensure $array is a jQuery object; if not, convert it
-    const $elements = $($array);
-    
-    // Iterate over jQuery collection using .each()
-    $elements.each(function() {
-        $(this).hover(function(e) {
-            e.preventDefault()
-            try {
-                globalThis.click.currentTime = 0; // Reset audio to start
-                globalThis.playSound("hover_button"); // Play the sound
-            } catch (err) {
-                console.error(`Error playing sound: ${err.message}`);
-            }
-        });
+    gameBoard.on("click", ".super-cell", function () {
+        clickLogic();
     });
 }
-
 
 function handleAnchor($array = []){
     // Ensure $array is a jQuery object; if not, convert it
