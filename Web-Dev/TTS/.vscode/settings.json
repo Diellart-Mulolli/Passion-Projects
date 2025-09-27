@@ -1,0 +1,19 @@
+{
+  "liveServer.settings.port": 5501,
+  "liveServer.settings.proxy": {
+    "enable": true,
+    "baseUri": "/",
+    "proxyUri": "http://localhost:80/TTS/OCR"
+  },
+  "liveServer.settings.useWebExt": false,
+  "liveServer.settings.watchFiles": [
+    "C:/xampp/htdocs/TTS/OCR/**/*.php",
+    "C:/xampp/htdocs/TTS/OCR/**/*.html",
+    "C:/xampp/htdocs/TTS/OCR/**/*.css",
+    "C:/xampp/htdocs/TTS/OCR/**/*.js"
+  ],
+  "liveServer.settings.ignoreFiles": [
+    ".vscode/**",
+    "**/*.log"
+  ]
+}
