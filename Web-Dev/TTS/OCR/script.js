@@ -1,22 +1,47 @@
 const OCR_SPACE_URL = 'https://api.ocr.space/parse/image';
 const OCR_SPACE_API_KEY = 'K89687391588957';
 
-// Global state for TTS per file
-const fileStates = {};
+// Global state for TTS per file and global voice
+const fileStates = {
+    selectedVoiceIndex: '' // Store global voice index
+};
 
-// Helper: Wait for voices to load
+// Helper: Wait for voices to load and populate navbar voice picker
 async function waitForVoices() {
     return new Promise((resolve) => {
         const voices = speechSynthesis.getVoices().filter(v => v.lang.includes('en'));
         if (voices.length > 0) {
+            populateVoiceSelect(voices);
             resolve(voices);
         } else {
             speechSynthesis.onvoiceschanged = () => {
                 const updatedVoices = speechSynthesis.getVoices().filter(v => v.lang.includes('en'));
+                populateVoiceSelect(updatedVoices);
                 resolve(updatedVoices);
             };
         }
     });
+}
+
+// Populate voice picker in navbar
+function populateVoiceSelect(voices) {
+    const voiceSelect = document.getElementById('voiceSelect');
+    if (!voiceSelect) return;
+    voiceSelect.innerHTML = '<option value="">Select Voice</option>';
+    let defaultVoiceIndex = '';
+    voices.forEach((voice, index) => {
+        voiceSelect.innerHTML += `<option value="${index}">${voice.name} (${voice.lang})</option>`;
+        if (voice.name === 'Google UK English Female' && voice.lang === 'en-GB') {
+            defaultVoiceIndex = index.toString();
+        } else if (!defaultVoiceIndex && voice.lang === 'en-GB') {
+            defaultVoiceIndex = index.toString(); // Fallback to any en-GB voice
+        }
+    });
+    if (defaultVoiceIndex !== '') {
+        voiceSelect.value = defaultVoiceIndex;
+        fileStates.selectedVoiceIndex = defaultVoiceIndex;
+        console.log(`Default voice set: ${voices[defaultVoiceIndex].name} (${voices[defaultVoiceIndex].lang})`);
+    }
 }
 
 // Helper: Convert file to data URL
@@ -93,7 +118,6 @@ async function generateAndPlayAudio(fileId, text) {
             text: text,
             startTime: 0,
             position: 0,
-            voiceIndex: '',
             speed: 0.9
         };
 
@@ -109,32 +133,22 @@ async function generateAndPlayAudio(fileId, text) {
         state.utterance.rate = state.speed;
         state.utterance.pitch = 1;
         state.utterance.volume = 1;
+        if (fileStates.selectedVoiceIndex !== '') {
+            state.utterance.voice = voices[fileStates.selectedVoiceIndex];
+        }
 
-        // Voice picker
-        let voiceSelectHtml = `<select id="voiceSelect-${fileId}" class="form-select tts-controls" onchange="updateVoice('${fileId}', this.value)">`;
-        voiceSelectHtml += '<option value="">Select Voice</option>';
-        voices.forEach((voice, index) => {
-            voiceSelectHtml += `<option value="${index}">${voice.name} (${voice.lang})</option>`;
-        });
-        voiceSelectHtml += '</select>';
-
-        // TTS controls
+        // TTS controls (buttons and speed slider inline, no Save MP3)
         const audioControls = document.getElementById(`audioControls-${fileId}`);
         if (!audioControls) {
             throw new Error(`Audio controls element not found for ${fileId}`);
         }
         audioControls.innerHTML = `
-            <div class="tts-controls d-flex flex-column gap-2">
-                ${voiceSelectHtml}
-                <div class="d-flex gap-2 flex-wrap">
-                    <button id="playPauseBtn-${fileId}" class="btn btn-primary btn-sm" onclick="togglePlayPause('${fileId}')">Play</button>
-                    <button class="btn btn-secondary btn-sm" onclick="stopSpeech('${fileId}')">Stop</button>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <label for="speedControl-${fileId}" class="form-label mb-0">Speed:</label>
-                    <input type="range" class="form-range tts-controls" id="speedControl-${fileId}" min="0.5" max="2" step="0.1" value="0.9"
-                           oninput="updateSpeechSpeed('${fileId}', this.value)">
-                </div>
+            <div class="tts-controls d-flex align-items-center gap-2 flex-wrap">
+                <button id="playPauseBtn-${fileId}" class="btn btn-primary btn-sm" onclick="togglePlayPause('${fileId}')">Play</button>
+                <button class="btn btn-secondary btn-sm" onclick="stopSpeech('${fileId}')">Stop</button>
+                <label for="speedControl-${fileId}" class="form-label mb-0">Speed:</label>
+                <input type="range" class="form-range tts-controls" id="speedControl-${fileId}" min="0.5" max="2" step="0.1" value="0.9"
+                       oninput="updateSpeechSpeed('${fileId}', this.value)">
             </div>
         `;
 
@@ -162,9 +176,9 @@ function togglePlayPause(fileId) {
             state.utterance.rate = state.speed;
             state.utterance.pitch = 1;
             state.utterance.volume = 1;
-            if (state.voiceIndex) {
+            if (fileStates.selectedVoiceIndex !== '') {
                 const voices = speechSynthesis.getVoices().filter(v => v.lang.includes('en'));
-                state.utterance.voice = voices[state.voiceIndex];
+                state.utterance.voice = voices[fileStates.selectedVoiceIndex];
             }
         }
         speechSynthesis.resume();
@@ -198,35 +212,42 @@ function stopSpeech(fileId) {
     }
 }
 
-// Update voice
-async function updateVoice(fileId, voiceIndex) {
-    const state = fileStates[fileId];
-    if (!state) return;
+// Update voice (global)
+async function updateVoice(voiceIndex) {
+    fileStates.selectedVoiceIndex = voiceIndex;
     const voices = await waitForVoices();
-    if (voiceIndex && voices[voiceIndex]) {
-        const wasPaused = state.isPaused;
-        state.position = wasPaused ? state.position : (Date.now() - state.startTime) / 1000;
-        speechSynthesis.cancel();
-        state.utterance = new SpeechSynthesisUtterance(state.text);
-        state.utterance.lang = 'en-US';
-        state.utterance.rate = state.speed;
-        state.utterance.voice = voices[voiceIndex];
-        state.utterance.volume = 1;
-        state.voiceIndex = voiceIndex;
-        speechSynthesis.speak(state.utterance);
-        if (wasPaused) {
-            speechSynthesis.pause();
-            document.getElementById(`playPauseBtn-${fileId}`).textContent = 'Play';
-        } else {
-            document.getElementById(`playPauseBtn-${fileId}`).textContent = 'Pause';
-        }
-        state.startTime = Date.now() - state.position * 1000;
-        console.log(`Voice updated for ${fileId}:`, voices[voiceIndex].name);
+    if (voiceIndex !== '' && voices[voiceIndex]) {
+        console.log(`Global voice updated: ${voices[voiceIndex].name}`);
+        // Update all active utterances
+        Object.keys(fileStates).forEach(async (fileId) => {
+            if (fileId === 'selectedVoiceIndex') return;
+            const state = fileStates[fileId];
+            if (!state) return;
+            const wasPaused = state.isPaused;
+            state.position = wasPaused ? state.position : (Date.now() - state.startTime) / 1000;
+            speechSynthesis.cancel();
+            state.utterance = new SpeechSynthesisUtterance(state.text);
+            state.utterance.lang = 'en-US';
+            state.utterance.rate = state.speed;
+            state.utterance.pitch = 1;
+            state.utterance.volume = 1;
+            state.utterance.voice = voices[voiceIndex];
+            speechSynthesis.speak(state.utterance);
+            if (wasPaused) {
+                speechSynthesis.pause();
+                const btn = document.getElementById(`playPauseBtn-${fileId}`);
+                if (btn) btn.textContent = 'Play';
+            } else {
+                const btn = document.getElementById(`playPauseBtn-${fileId}`);
+                if (btn) btn.textContent = 'Pause';
+            }
+            state.startTime = Date.now() - state.position * 1000;
+        });
     }
 }
 
 // Update speech speed
-function updateSpeechSpeed(fileId, speed) {
+async function updateSpeechSpeed(fileId, speed) {
     const state = fileStates[fileId];
     if (!state) return;
     const wasPaused = state.isPaused;
@@ -238,9 +259,9 @@ function updateSpeechSpeed(fileId, speed) {
     state.utterance.pitch = 1;
     state.utterance.volume = 1;
     state.speed = parseFloat(speed);
-    if (state.voiceIndex) {
-        const voices = speechSynthesis.getVoices().filter(v => v.lang.includes('en'));
-        state.utterance.voice = voices[state.voiceIndex];
+    if (fileStates.selectedVoiceIndex !== '') {
+        const voices = await waitForVoices();
+        state.utterance.voice = voices[fileStates.selectedVoiceIndex];
     }
     speechSynthesis.speak(state.utterance);
     if (wasPaused) {
@@ -269,8 +290,13 @@ async function processImages() {
     progressBar.classList.remove('d-none');
     progressFill.style.width = '0%';
     fileSections.innerHTML = '';
-    Object.keys(fileStates).forEach(key => delete fileStates[key]);
+    Object.keys(fileStates).forEach(key => {
+        if (key !== 'selectedVoiceIndex') delete fileStates[key];
+    });
     speechSynthesis.cancel();
+
+    // Initialize voice picker
+    await waitForVoices();
 
     let hasText = false;
     const fileArray = Array.from(files); // Convert FileList to Array

@@ -13,6 +13,13 @@ body {
     max-width: 200px;
 }
 
+.navbar .tts-controls {
+    max-width: 150px;
+    font-size: 0.85rem;
+    padding: 0.25rem;
+    border-radius: 4px;
+}
+
 .progress {
     height: 1rem;
     background-color: #e9ecef;
@@ -24,7 +31,9 @@ body {
 }
 
 .container-fluid {
-    max-width: 1200px;
+    /* Removed max-width: 1200px for full-screen */
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .file-section {
@@ -32,7 +41,7 @@ body {
 }
 
 .card {
-    height: 80vh; /* Card takes 80% of viewport height */
+    height: 90vh; /* Increased to 90% of viewport height */
     border: 1px solid #dee2e6;
     border-radius: 8px;
     overflow: hidden;
@@ -43,12 +52,13 @@ body {
 }
 
 .card-img-top {
-    max-height: calc(80vh - 100px); /* Reserve ~100px for TTS controls */
+    max-height: calc(90vh - 80px); /* Maximize image, reserve ~80px for TTS controls */
     width: auto;
     object-fit: contain;
     display: block;
     margin: 0 auto;
     padding: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Border-shadow around image */
 }
 
 .card-body {
@@ -58,14 +68,11 @@ body {
 
 .tts-controls {
     display: flex;
-    flex-direction: column;
+    flex-direction: row; /* Inline buttons and speed slider */
+    align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-}
-
-.tts-controls select {
-    font-size: 0.85rem;
-    padding: 0.25rem;
-    border-radius: 4px;
+    flex-wrap: wrap;
 }
 
 .tts-controls .btn {
@@ -93,20 +100,14 @@ body {
     border-color: #6c757d;
 }
 
-.tts-controls .btn-success {
-    background-color: #28a745;
-    border-color: #28a745;
-    opacity: 0.5; /* Disabled style */
-    pointer-events: none; /* Disable interaction */
-}
-
 .tts-controls .form-label {
     font-size: 0.75rem;
     margin-bottom: 0;
 }
 
 .tts-controls .form-range {
-    height: 0.75rem;
+    width: 100px; /* Smaller slider width */
+    height: 0.6rem; /* Smaller slider height */
     padding: 0;
 }
 
@@ -124,11 +125,11 @@ hr {
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .card {
-        height: 80vh; /* Smaller height on mobile */
+        height: 60vh; /* Increased for mobile */
     }
 
     .card-img-top {
-        max-height: calc(80vh - 100px);
+        max-height: calc(60vh - 80px); /* Adjust for TTS controls */
     }
 
     .tts-controls {
@@ -136,7 +137,6 @@ hr {
         padding: 0.3rem;
     }
 
-    .tts-controls select,
     .tts-controls .btn {
         font-size: 0.75rem;
         padding: 0.2rem 0.4rem;
@@ -147,6 +147,13 @@ hr {
     }
 
     .tts-controls .form-range {
-        height: 0.6rem;
+        width: 80px; /* Smaller slider on mobile */
+        height: 0.5rem; /* Smaller height on mobile */
+    }
+
+    .navbar .tts-controls {
+        max-width: 120px;
+        font-size: 0.75rem;
+        padding: 0.2rem;
     }
 }

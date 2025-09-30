@@ -12,7 +12,10 @@
     <nav class="navbar navbar-light bg-light">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">Image to Audio Converter</span>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center">
+                <select id="voiceSelect" class="form-select tts-controls" onchange="updateVoice(this.value)">
+                    <option value="">Select Voice</option>
+                </select>
                 <input type="file" id="imageInput" class="form-control" accept="image/*" multiple>
                 <button class="btn btn-primary" onclick="processImages()">Process Images</button>
             </div>
