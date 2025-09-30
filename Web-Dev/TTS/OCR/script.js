@@ -36,8 +36,8 @@ async function fileToDataURL(file) {
     }
 }
 
-// OCR.space: Extract text
-async function extractTextFromImage(dataUrl, fileName) {
+// OCR.space: Extract text with retry
+async function extractTextFromImage(dataUrl, fileName, retries = 1) {
     try {
         console.log(`Trying OCR.space for ${fileName}...`);
         const formData = new FormData();
@@ -52,7 +52,9 @@ async function extractTextFromImage(dataUrl, fileName) {
         const response = await fetch(OCR_SPACE_URL, {
             method: 'POST',
             headers: { 'apikey': OCR_SPACE_API_KEY },
-            body: formData
+            body: formData,
+            mode: 'cors',
+            credentials: 'omit'
         });
 
         if (!response.ok) {
@@ -68,7 +70,12 @@ async function extractTextFromImage(dataUrl, fileName) {
         return text.trim();
     } catch (error) {
         console.error(`OCR.space Error for ${fileName}:`, error);
-        alert(`OCR failed for ${fileName}: ${error.message}. Try a different image or network.`);
+        if (retries > 0) {
+            console.log(`Retrying OCR for ${fileName}... (${retries} retries left)`);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+            return extractTextFromImage(dataUrl, fileName, retries - 1);
+        }
+        alert(`OCR failed for ${fileName}: ${error.message}. Ensure you're hosting the app (e.g., python -m http.server) and using a stable network or VPN.`);
         return '';
     }
 }
@@ -104,7 +111,7 @@ async function generateAndPlayAudio(fileId, text) {
         state.utterance.volume = 1;
 
         // Voice picker
-        let voiceSelectHtml = `<select id="voiceSelect-${fileId}" class="form-select mb-2 tts-controls" onchange="updateVoice('${fileId}', this.value)">`;
+        let voiceSelectHtml = `<select id="voiceSelect-${fileId}" class="form-select tts-controls" onchange="updateVoice('${fileId}', this.value)">`;
         voiceSelectHtml += '<option value="">Select Voice</option>';
         voices.forEach((voice, index) => {
             voiceSelectHtml += `<option value="${index}">${voice.name} (${voice.lang})</option>`;
@@ -113,17 +120,19 @@ async function generateAndPlayAudio(fileId, text) {
 
         // TTS controls
         const audioControls = document.getElementById(`audioControls-${fileId}`);
+        if (!audioControls) {
+            throw new Error(`Audio controls element not found for ${fileId}`);
+        }
         audioControls.innerHTML = `
             <div class="tts-controls d-flex flex-column gap-2">
                 ${voiceSelectHtml}
-                <div>
-                    <button id="playPauseBtn-${fileId}" class="btn btn-primary" onclick="togglePlayPause('${fileId}')">Play</button>
-                    <button class="btn btn-secondary" onclick="stopSpeech('${fileId}')">Stop</button>
-                    <button class="btn btn-success" disabled>Save as MP3</button>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button id="playPauseBtn-${fileId}" class="btn btn-primary btn-sm" onclick="togglePlayPause('${fileId}')">Play</button>
+                    <button class="btn btn-secondary btn-sm" onclick="stopSpeech('${fileId}')">Stop</button>
                 </div>
-                <div>
-                    <label for="speedControl-${fileId}" class="form-label">Speed: </label>
-                    <input type="range" class="form-range w-100 tts-controls" id="speedControl-${fileId}" min="0.5" max="2" step="0.1" value="0.9"
+                <div class="d-flex align-items-center gap-2">
+                    <label for="speedControl-${fileId}" class="form-label mb-0">Speed:</label>
+                    <input type="range" class="form-range tts-controls" id="speedControl-${fileId}" min="0.5" max="2" step="0.1" value="0.9"
                            oninput="updateSpeechSpeed('${fileId}', this.value)">
                 </div>
             </div>
@@ -202,6 +211,7 @@ async function updateVoice(fileId, voiceIndex) {
         state.utterance.lang = 'en-US';
         state.utterance.rate = state.speed;
         state.utterance.voice = voices[voiceIndex];
+        state.utterance.volume = 1;
         state.voiceIndex = voiceIndex;
         speechSynthesis.speak(state.utterance);
         if (wasPaused) {
@@ -225,6 +235,8 @@ function updateSpeechSpeed(fileId, speed) {
     state.utterance = new SpeechSynthesisUtterance(state.text);
     state.utterance.lang = 'en-US';
     state.utterance.rate = parseFloat(speed);
+    state.utterance.pitch = 1;
+    state.utterance.volume = 1;
     state.speed = parseFloat(speed);
     if (state.voiceIndex) {
         const voices = speechSynthesis.getVoices().filter(v => v.lang.includes('en'));
@@ -252,6 +264,7 @@ async function processImages() {
         alert('Please select at least one image.');
         return;
     }
+
     // Reset UI
     progressBar.classList.remove('d-none');
     progressFill.style.width = '0%';
@@ -260,35 +273,57 @@ async function processImages() {
     speechSynthesis.cancel();
 
     let hasText = false;
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const fileId = file.name.replace(/[^a-zA-Z0-9]/g, '_');
-        progressFill.style.width = `${((i + 1) / files.length) * 100}%`;
+    const fileArray = Array.from(files); // Convert FileList to Array
+    const filePairs = [];
+    for (let i = 0; i < fileArray.length; i += 2) {
+        filePairs.push(fileArray.slice(i, i + 2));
+    }
 
-        try {
-            const dataUrl = await fileToDataURL(file);
-            if (!dataUrl) continue;
+    for (let i = 0; i < filePairs.length; i++) {
+        const pair = filePairs[i];
+        const section = document.createElement('div');
+        section.className = 'file-section mb-3';
+        const row = document.createElement('div');
+        row.className = 'row';
+        let hasValidImage = false;
 
-            const text = await extractTextFromImage(dataUrl, file.name);
-            if (!text) continue;
+        for (let j = 0; j < pair.length; j++) {
+            const file = pair[j];
+            const fileId = file.name.replace(/[^a-zA-Z0-9]/g, '_');
+            progressFill.style.width = `${((i * 2 + j + 1) / fileArray.length) * 100}%`;
 
-            hasText = true;
-            const section = document.createElement('div');
-            section.className = 'file-section row mb-3';
-            section.innerHTML = `
-                <div class="col-md-4">
-                    <img src="${dataUrl}" alt="${file.name}">
-                </div>
-                <div class="col-md-4">
-                    <h3>Text from ${file.name}</h3>
-                </div>
-                <div class="col-md-4" id="audioControls-${fileId}"></div>
-            `;
+            try {
+                const dataUrl = await fileToDataURL(file);
+                if (!dataUrl) continue;
+
+                const text = await extractTextFromImage(dataUrl, file.name);
+                if (!text) continue;
+
+                hasText = true;
+                hasValidImage = true;
+                const col = document.createElement('div');
+                col.className = 'col-md-6';
+                col.innerHTML = `
+                    <div class="card">
+                        <img src="${dataUrl}" alt="${file.name}" class="card-img-top">
+                        <div class="card-body" id="audioControls-${fileId}"></div>
+                    </div>
+                `;
+                row.appendChild(col);
+                section.appendChild(row);
+                fileSections.appendChild(section); // Append to DOM before generateAndPlayAudio
+                await generateAndPlayAudio(fileId, text);
+            } catch (error) {
+                console.error(`Error processing ${file.name}:`, error);
+                continue;
+            }
+        }
+
+        if (hasValidImage && !fileSections.contains(section)) {
+            section.appendChild(row);
+            const hr = document.createElement('hr');
+            section.appendChild(hr);
             fileSections.appendChild(section);
-            await generateAndPlayAudio(fileId, text);
-        } catch (error) {
-            console.error(`Error processing ${file.name}:`, error);
-            continue;
         }
     }
 

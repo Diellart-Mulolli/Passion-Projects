@@ -1,4 +1,4 @@
-/* Blue Theme and Cleaner UI */
+/* Blue Theme and Two-Page Card Layout */
 body {
     font-family: 'Roboto', sans-serif;
     background-color: #f5f6f5;
@@ -28,75 +28,125 @@ body {
 }
 
 .file-section {
-    background-color: #fff;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    animation: fadeIn 0.5s ease-in;
+    padding: 1rem;
 }
 
-.file-section img {
-    max-height: calc(100vh - 56px); /* Viewport height minus nav */
-    width: auto;
-    margin-bottom: 1rem;
+.card {
+    height: 80vh; /* Card takes 80% of viewport height */
     border: 1px solid #dee2e6;
     border-radius: 8px;
-    object-fit: contain;
-}
-
-.file-section pre {
-    background-color: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    max-height: 700px; /* Larger text area */
-    overflow-y: auto;
-    font-size: 0.85rem; /* Smaller font */
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
-.file-section .tts-controls {
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
 }
 
-.file-section .tts-controls .btn,
-.file-section .tts-controls select,
-.file-section .tts-controls input {
-    width: 100%; /* Consistent width */
-    border-radius: 6px;
+.card-img-top {
+    max-height: calc(80vh - 100px); /* Reserve ~100px for TTS controls */
+    width: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    padding: 0.5rem;
 }
 
-.file-section .btn-primary {
+.card-body {
+    padding: 0.5rem;
+    flex: 0 0 auto; /* Prevent stretching */
+}
+
+.tts-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.tts-controls select {
+    font-size: 0.85rem;
+    padding: 0.25rem;
+    border-radius: 4px;
+}
+
+.tts-controls .btn {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.tts-controls .btn:hover {
+    transform: translateY(-1px);
+}
+
+.tts-controls .btn-primary {
     background-color: #007bff;
     border-color: #007bff;
-    transition: background-color 0.2s;
 }
 
-.file-section .btn-primary:hover {
+.tts-controls .btn-primary:hover {
     background-color: #0056b3;
 }
 
-.file-section .btn-secondary {
+.tts-controls .btn-secondary {
     background-color: #6c757d;
     border-color: #6c757d;
 }
 
-.file-section .btn-success {
+.tts-controls .btn-success {
     background-color: #28a745;
     border-color: #28a745;
     opacity: 0.5; /* Disabled style */
     pointer-events: none; /* Disable interaction */
 }
 
+.tts-controls .form-label {
+    font-size: 0.75rem;
+    margin-bottom: 0;
+}
+
+.tts-controls .form-range {
+    height: 0.75rem;
+    padding: 0;
+}
+
 hr {
     border-top: 2px solid #dee2e6;
-    margin: 2.5rem 0;
+    margin: 1.5rem 0;
     opacity: 0.5;
 }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card {
+        height: 80vh; /* Smaller height on mobile */
+    }
+
+    .card-img-top {
+        max-height: calc(80vh - 100px);
+    }
+
+    .tts-controls {
+        gap: 0.3rem;
+        padding: 0.3rem;
+    }
+
+    .tts-controls select,
+    .tts-controls .btn {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .tts-controls .form-label {
+        font-size: 0.7rem;
+    }
+
+    .tts-controls .form-range {
+        height: 0.6rem;
+    }
 }

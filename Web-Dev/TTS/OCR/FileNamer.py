@@ -31,7 +31,7 @@ def rename_files_numerically(directory_path, file_extension=None, keep_extension
         name, extension = os.path.splitext(filename)
         
         if keep_extension and extension:
-            new_filename = f"4.{i}{extension}"
+            new_filename = f"14.{i}{extension}"
         else:
             new_filename = str(i)
         
@@ -51,5 +51,5 @@ def rename_files_numerically(directory_path, file_extension=None, keep_extension
 # Usage examples with different ways to write paths:
 
 # Method 1: Raw string (recommended)
-rename_files_numerically(r"C:\Users\W11\OneDrive\Pictures\MM-Screenshots\Chapter 4")
+rename_files_numerically(r"C:\Users\W11\OneDrive\Pictures\MM-Screenshots\Chapter 14")
 
